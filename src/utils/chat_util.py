@@ -12,14 +12,14 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from dotenv import load_dotenv
 
 load_dotenv()
-os.environ["HUGGINGFACEHUB_API_TOKEN"] = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+token = os.getenv("HUGGINGFACEHUB_API_TOKEN")
 
 def get_answer(id, question):
 
     model_id = "meta-llama/Llama-3.2-3B-Instruct"
     
     quantization_config = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_use_double_quant=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=torch.bfloat16)
-    model = AutoModelForCausalLM.from_pretrained(model_id, quantization_config=quantization_config)
+    model = AutoModelForCausalLM.from_pretrained(model_id, token=token, quantization_config=quantization_config)
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     pipe = pipeline(model=model, tokenizer=tokenizer, task="text-generation", temperature=0.1, max_new_tokens=512, do_sample=True, repetition_penalty=1.2, return_full_text=False)
     llm = HuggingFacePipeline(pipeline=pipe)
