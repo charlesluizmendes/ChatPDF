@@ -1,9 +1,22 @@
-from marshmallow import fields, validate
-from src.config import ma
-from src.models.pdf import Pdf  
+import uuid
+from marshmallow import Schema, fields, ValidationError
 
-class PdfSchema(ma.SQLAlchemySchema):
-    class Meta:
-        model = Pdf
+class PdfSchema(Schema):
+    id = fields.String(dump_only=True)
+    file = fields.Raw(required=True)
 
-    name = fields.Str(required=True, validate=validate.Length(min=1, error="O Nome não pode ser vazio"))
+    @staticmethod
+    def validate_file(file):
+        if not file:
+            raise ValidationError("O arquivo é obrigatório.")
+        if not hasattr(file, "filename"):
+            raise ValidationError("Formato de arquivo inválido.")
+        return file
+
+    def load_file(self, file):
+        validated_file = self.validate_file(file)
+        return {
+            "id": str(uuid.uuid4()),
+            "name": validated_file.filename,
+            "content": validated_file.read(),
+        }

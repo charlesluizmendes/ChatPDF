@@ -1,29 +1,30 @@
 from flask import request
 from flask_restx import Resource
+from marshmallow import ValidationError
 
 from src.restx import api
-from src.models.pdf import Pdf
+from src.schemas.chat_schema import ChatSchema
 from src.serializers.chat_serializer import chat_serializer
-from src.utils.chat_util import get_answer
+from src.utils.llm_util import get_answer
 
 ns_chat = api.namespace('chat')
 
-@ns_chat.route('/<uuid:id>')
-class PDFQuestionView(Resource):
+@ns_chat.route('/message')
+class MessageView(Resource):
 
     @ns_chat.expect(chat_serializer)
-    def post(self, id):
-
-        pdf = Pdf.query.get(str(id))
-
-        if not pdf:
-            return {"message": "PDF file not found"}, 404
-        
+    def post(self):
         data = request.get_json()
+        schema = ChatSchema()
 
-        if 'question' not in data:
-            return {"message": "Question is required"}, 400      
+        try:
+            validated_data = schema.load(data)
+        except ValidationError as err:
+            return {"message": err.messages}, 400
 
-        answer = get_answer(id, data['question'])
+        id = validated_data['id']
+        content = validated_data['content']
+
+        answer = get_answer(id, content)
         
-        return {"answer": answer}, 200
+        return {"content": answer}, 200

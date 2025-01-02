@@ -26,19 +26,38 @@ $ pip install python-dotenv
 $ pip install langchain
 $ pip install langchain-community
 $ pip install langchain-huggingface
+$ pip install langchain-mongodb 
 $ pip install sentence-transformers
+$ pip install pymongo
 $ pip install pypdf
-$ pip install faiss-cpu
 ```
 
-## Migration using SQLlite:
+## Atlas Vector Search:
 
-(enter in directory '/src')
+(Create Indexes in MongoDB for 'embeddings' and 'pre_filter')
 
 ```
-$ flask db init
-$ flask db migrate -m "Initial migration"
-$ flask db upgrade
+{
+  "fields": [
+    {
+      "type": "vector",
+      "path": "embedding",
+      "numDimensions": 768,
+      "similarity": "cosine"
+    },
+    {
+      "type": "filter",
+      "path": "id"
+    }
+  ]
+}
+```
+
+## Compilation and Execution
+
+```
+docker build --no-cache -t questionanswering .
+docker run --name qa -p 5001:5001 questionanswering
 ```
 
 ## Used CUDA:
@@ -51,7 +70,7 @@ $ pip install bitsandbytes
 $ pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121 # change for version CUDA
 ```
 
-(in chat_util.py)
+(in llm_util.py)
 
 ```
 import torch    
