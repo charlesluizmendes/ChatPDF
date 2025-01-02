@@ -56,8 +56,8 @@ $ pip install pypdf
 ## Compilation and Execution
 
 ```
-docker build --no-cache -t questionanswering .
-docker run --name qa -p 5001:5001 questionanswering
+docker build --no-cache -t chatpdf .
+docker run --name qa -p 5001:5001 chatpdf
 ```
 
 ## Used CUDA:
