@@ -46,6 +46,7 @@ Para realizar o armazenamento e recuperação dos embeddings do projeto, será u
 Primeiramente crie um container do MongoDB Atlas:
 
 ```
+docker run -p 27017:27017 --name atlas-local mongodb/mongodb-atlas-local
 ```
 
 Após isso crie o dataset e as collection no MongoDB Atlas, da mesma maneira que esta no arquivo .env:
@@ -58,7 +59,7 @@ MONGO_COLLECTION_DOCS=pdf_documents
 
 Com isso teremos o dataset 'chatpdf' e duas collections dentro dele 'pdf_vectors' e 'pdf_documents'.
 
-Com isso podemos agora criar o Indexes para o 'source_id' dos chunks e os embeddings da collection 'pdf_vectors', esses serão utilizados no 'pre_filter' do retriever. Basta acessar terminal do container e o MongoDB Atlas, execute os comandos abaixo:
+Agora podemos agora criar o Indexes para o 'source_id' dos chunks e os embeddings da collection 'pdf_vectors', esses serão utilizados no 'pre_filter' do retriever. Basta acessar terminal do container e o MongoDB Atlas, execute os comandos abaixo:
 
 ```
 docker exec -it [ID do Container Docker do Mongo] bash  
@@ -94,6 +95,8 @@ db.pdf_vectors.createSearchIndex({
 })
 ```
 
+***
+
 Para criação de Indexes no HuggingFace o comando seria:
 
 ```
@@ -112,12 +115,14 @@ db.pdf_vectors.createSearchIndex({
       },
       {
         "type": "filter",
-        "path": "id"
+        "path": "source_id"
       }
     ]
   }
 })
 ```
+
+***
 
 Ou diretamente no Atlas Cloud o fluxo seria um pouco diferente:
 
@@ -138,7 +143,7 @@ Em seguida inseira o JSON abaixo para o OpenAI:
     },
     {
       "type": "filter",
-      "path": "id"
+      "path": "source_id"
     }
   ]
 }
@@ -157,7 +162,7 @@ E para o HuggingFace:
     },
     {
       "type": "filter",
-      "path": "id"
+      "path": "source_id"
     }
   ]
 }
