@@ -78,7 +78,8 @@ E logo após os comandos acima criar o Indexes*:
 
 ```
 use chatpdf
-
+```
+```
 db.pdf_vectors.createSearchIndex({
   name: "vector_index",
   type: "vectorSearch",
