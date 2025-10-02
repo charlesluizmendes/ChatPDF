@@ -7,14 +7,13 @@ venv/
 
 # Outros exemplos comuns
 *.log
-*.env
 .DS_Store
 
 # VSCode
 .vscode
 
 # Databases and migrations
-src/migrations/
 *.db
-*.faiss
-*.pkl
+
+# env
+.env
