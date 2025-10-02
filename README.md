@@ -1,3 +1,7 @@
+# ChatPDF
+
+API de RAG utilizando LLM do OpenAI e MongoDB Atlas.
+
 ## Ambiente
 
 ### Virtualenv
@@ -95,8 +99,6 @@ db.pdf_vectors.createSearchIndex({
 })
 ```
 
-***
-
 Para criação de Indexes no HuggingFace o comando seria:
 
 ```
@@ -124,7 +126,7 @@ db.pdf_vectors.createSearchIndex({
 
 ***
 
-Ou diretamente no Atlas Cloud o fluxo seria um pouco diferente:
+Ou se preferir diretamente no Atlas Cloud o fluxo seria um pouco diferente:
 
 Cluster > Browse Collection >
 Atlas Search > Create Search Index >
