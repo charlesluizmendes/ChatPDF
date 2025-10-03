@@ -35,6 +35,7 @@ Ou se preferir, instalar cada dependencia do projeto manualmente execute os coma
 
 ```
 pip install "fastapi[standard]"
+pip install fastapi-versionizer
 pip install pymongo
 pip install pypdf
 pip install langchain
