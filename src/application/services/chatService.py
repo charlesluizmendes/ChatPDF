@@ -17,13 +17,12 @@ class ChatService(IChatService):
         self.vector_repository = vector_repository
         self.llm_service = llm_service
 
-        self.prompt = (
+        self.default_prompt = (
             "Você é um assistente especializado em responder perguntas sobre documentos PDF. "
             "Use somente o contexto fornecido para responder de forma precisa e concisa."
             "Se a informação não estiver no contexto responda apenas 'Não possuo informações sobre isso.'"
         )
-
-        self.temperature = 0.0
+        self.default_temperature = 0.0
 
     async def message(self, dto: ChatInputDTO) -> Result[ChatOutputDTO]:
         exists = await self.pdf_repository.exists(dto.source_id)
@@ -32,11 +31,14 @@ class ChatService(IChatService):
         
         retriever = await self.vector_repository.get_retriever(dto.source_id)       
 
+        prompt = dto.prompt if dto.prompt is not None else self.default_prompt
+        temperature = dto.temperature if dto.temperature is not None else self.default_temperature
+
         content = await self.llm_service.ask(
             message=dto.message,
             retriever=retriever,
-            prompt=self.prompt,
-            temperature=self.temperature
+            prompt=prompt,
+            temperature=temperature
         )
         
         output = ChatOutputDTO(content=content)        
