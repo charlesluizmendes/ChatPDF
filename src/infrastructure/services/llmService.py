@@ -1,10 +1,8 @@
 from langchain_openai import ChatOpenAI
-from langchain.prompts.chat import (
-    ChatPromptTemplate,
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-)
-from langchain.chains.retrieval_qa.base import RetrievalQA
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain.chains import create_history_aware_retriever, create_retrieval_chain
+from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain_core.messages import HumanMessage, AIMessage
 
 from src.domain.interfaces.services.llmService import IllmService
 
@@ -18,15 +16,31 @@ class LlmService(IllmService):
         self.model = model
         self.api_key = api_key
     
-    async def ask(self, message: str, retriever, prompt: str, temperature: float) -> str:
+    def _convert_messages_to_langchain(self, messages: list) -> list:
+        langchain_messages = []
+
+        for msg in messages:
+            if msg["role"] == "user":
+                langchain_messages.append(HumanMessage(content=msg["content"]))
+            elif msg["role"] == "assistant":
+                langchain_messages.append(AIMessage(content=msg["content"]))
+                
+        return langchain_messages
+
+    async def ask(self, messages: list, retriever, prompt: str, temperature: float) -> str:
         try:
-            system_message = SystemMessagePromptTemplate.from_template(prompt)
+            current_question = messages[-1]["content"]
             
-            human_message = HumanMessagePromptTemplate.from_template(
-                "Contexto: {context}\n\nPergunta: {question}"
-            )
+            chat_history = self._convert_messages_to_langchain(messages[:-1]) if len(messages) > 1 else []
             
-            chat_prompt = ChatPromptTemplate.from_messages([system_message, human_message])
+            contextualize_q_prompt = ChatPromptTemplate.from_messages([
+                ("system", "Dado um histórico de conversa e a última pergunta do usuário, "
+                    "formule uma pergunta independente que possa ser compreendida "
+                    "sem o histórico da conversa. NÃO responda a pergunta, "
+                    "apenas reformule se necessário, caso contrário retorne como está."),
+                MessagesPlaceholder("chat_history"),
+                ("human", "{input}"),
+            ])
             
             llm = ChatOpenAI(
                 model=self.model,
@@ -34,16 +48,34 @@ class LlmService(IllmService):
                 temperature=temperature
             )
 
-            chat_chain = RetrievalQA.from_chain_type(
-                llm=llm,
-                retriever=retriever,
-                chain_type_kwargs={"prompt": chat_prompt},
-                return_source_documents=True
+            history_aware_retriever = create_history_aware_retriever(
+                llm, 
+                retriever, 
+                contextualize_q_prompt
             )
             
-            result = chat_chain.invoke({"query": message})
+            qa_prompt = ChatPromptTemplate.from_messages([
+                ("system", prompt + "\n\nContexto: {context}"),
+                MessagesPlaceholder("chat_history"),
+                ("human", "{input}"),
+            ])
             
-            return result["result"]
+            question_answer_chain = create_stuff_documents_chain(
+                llm, 
+                qa_prompt
+            )
+            
+            rag_chain = create_retrieval_chain(
+                history_aware_retriever, 
+                question_answer_chain
+            )
+            
+            result = await rag_chain.ainvoke({
+                "input": current_question,
+                "chat_history": chat_history
+            })
+            
+            return result["answer"]
         
         except Exception:
             raise
