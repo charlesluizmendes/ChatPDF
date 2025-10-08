@@ -17,7 +17,6 @@ MONGO_INDEX_NAME = os.getenv("MONGO_INDEX_NAME")
 
 OPENAI_MODEL = os.getenv("OPENAI_MODEL")
 OPENAI_KEY = os.getenv("OPENAI_KEY")
-OPENAI_TEMPERATURE = os.getenv("OPENAI_TEMPERATURE")
 
 CHUNK_SIZE = int(os.getenv("CHUNK_SIZE"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP"))
@@ -51,6 +50,5 @@ def get_vector_repository() -> VectorRepository:
 def get_llm_service() -> LlmService:
     return LlmService(
         model=OPENAI_MODEL,
-        api_key=OPENAI_KEY,
-        temperature=OPENAI_TEMPERATURE
+        api_key=OPENAI_KEY
     )

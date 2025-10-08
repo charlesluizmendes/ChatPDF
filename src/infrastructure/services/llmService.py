@@ -12,16 +12,12 @@ class LlmService(IllmService):
     def __init__(
         self,
         model: str,
-        api_key: str,
-        temperature: float
+        api_key: str
     ):
-        self.llm = ChatOpenAI(
-            model=model,
-            api_key=api_key,
-            temperature=temperature
-        )
+        self.model = model
+        self.api_key = api_key
     
-    async def ask(self, message: str, retriever, prompt: str) -> str:
+    async def ask(self, message: str, retriever, prompt: str, temperature: float) -> str:
         try:
             system_message = SystemMessagePromptTemplate.from_template(prompt)
             
@@ -31,8 +27,14 @@ class LlmService(IllmService):
             
             chat_prompt = ChatPromptTemplate.from_messages([system_message, human_message])
             
+            llm = ChatOpenAI(
+                model=self.model,
+                api_key=self.api_key,
+                temperature=temperature
+            )
+
             chat_chain = RetrievalQA.from_chain_type(
-                llm=self.llm,
+                llm=llm,
                 retriever=retriever,
                 chain_type_kwargs={"prompt": chat_prompt},
                 return_source_documents=True
