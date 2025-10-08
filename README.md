@@ -171,3 +171,21 @@ E para o HuggingFace:
   ]
 }
 ```
+
+### Docker
+
+Para criar uma imagem no Docker, execute o comando abaixo:
+
+```
+docker build -t chat-pdf .
+```
+
+Para criar um container no Docker, execute o comando abaixo:
+
+```
+docker run --name chat-pdf --env-file .env -p 5001:5001 chat-pdf
+```
+
+Para testar a API executando no Docker, basta acessar o link abaixo:
+
+http://localhost:5001/api/latest/docs

@@ -27,7 +27,10 @@ _mongodb_context = None
 def get_mongodb_context() -> MongoContext:
     global _mongodb_context
     if _mongodb_context is None:
-        _mongodb_context = MongoContext(MONGO_URL, MONGO_DB, OPENAI_KEY)
+        _mongodb_context = MongoContext(
+            MONGO_URL, 
+            MONGO_DB
+        )
     return _mongodb_context
 
 def get_pdf_repository() -> PdfRepository:
@@ -41,7 +44,8 @@ def get_vector_repository() -> VectorRepository:
         collection_name=MONGO_COLLECTION_VECTORS,
         index_name=MONGO_INDEX_NAME,
         chunk_size=CHUNK_SIZE,
-        chunk_overlap=CHUNK_OVERLAP
+        chunk_overlap=CHUNK_OVERLAP,
+        api_key=OPENAI_KEY
     )
 
 def get_llm_service() -> LlmService:

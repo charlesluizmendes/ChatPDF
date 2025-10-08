@@ -3,9 +3,11 @@ from typing import Tuple, Any
 from langchain_community.document_loaders.pdf import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores.mongodb_atlas import MongoDBAtlasVectorSearch
+from langchain_openai import OpenAIEmbeddings
 
 from src.domain.interfaces.repositories.vectorRepository import IVectorRepository
 from src.infrastructure.context.mongoContext import MongoContext
+
 
 class VectorRepository(IVectorRepository):
     def __init__(
@@ -14,16 +16,20 @@ class VectorRepository(IVectorRepository):
         collection_name: str, 
         index_name: str,
         chunk_size: int,
-        chunk_overlap: int
+        chunk_overlap: int,
+        api_key: str
     ):
         self.context = context
         self.collection = context.get_collection(collection_name)
         self.index_name = index_name
-        self.embeddings = context.embeddings
         
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap
+        )
+
+        self.embeddings = OpenAIEmbeddings(
+            api_key=api_key
         )
     
     async def add_vectors(self, source_id: str, file_path: str) -> Tuple[bool, int]:       
