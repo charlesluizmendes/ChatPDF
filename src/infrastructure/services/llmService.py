@@ -8,6 +8,7 @@ from langchain.chains.retrieval_qa.base import RetrievalQA
 
 from src.domain.interfaces.services.llmService import IllmService
 
+
 class LlmService(IllmService):
     def __init__(
         self,

@@ -34,7 +34,10 @@ def get_mongodb_context() -> MongoContext:
 
 def get_pdf_repository() -> PdfRepository:
     context = get_mongodb_context()
-    return PdfRepository(context, MONGO_COLLECTION_DOCS)
+    return PdfRepository(
+        context, 
+        MONGO_COLLECTION_DOCS
+    )
 
 def get_vector_repository() -> VectorRepository:
     context = get_mongodb_context()

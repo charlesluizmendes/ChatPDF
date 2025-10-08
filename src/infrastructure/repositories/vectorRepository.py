@@ -27,7 +27,6 @@ class VectorRepository(IVectorRepository):
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap
         )
-
         self.embeddings = OpenAIEmbeddings(
             api_key=api_key
         )
