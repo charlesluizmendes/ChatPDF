@@ -8,7 +8,11 @@ from src.infrastructure.models.pdfModel import PdfModel
 
 
 class PdfRepository(IPdfRepository):
-    def __init__(self, context: MongoContext, collection_name: str):
+    def __init__(
+        self, 
+        context: MongoContext, 
+        collection_name: str
+    ):
         self.context = context
         self.collection = context.get_collection(collection_name)
     

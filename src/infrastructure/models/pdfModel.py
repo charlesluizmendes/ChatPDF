@@ -4,8 +4,13 @@ from datetime import datetime
 
 class PdfModel:   
     @staticmethod
-    def to_dict(source_id: str, filename: str, chunks_count: int, 
-                created_at: datetime, metadata: Optional[dict] = None) -> dict:
+    def to_dict(
+        source_id: str, 
+        filename: str, 
+        chunks_count: int, 
+        created_at: datetime, 
+        metadata: Optional[dict] = None
+    ) -> dict:
         return {
             "source_id": source_id,
             "filename": filename,
@@ -15,7 +20,9 @@ class PdfModel:
         }
     
     @staticmethod
-    def from_dict(data: dict) -> dict:
+    def from_dict(
+        data: dict
+    ) -> dict:
         return {
             "source_id": data.get("source_id"),
             "filename": data.get("filename"),
