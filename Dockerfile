@@ -7,10 +7,10 @@ RUN pip install --no-cache-dir \
     fastapi-versionizer \
     pymongo \
     pypdf \
-    langchain \
-    langchain-community \
-    langchain-openai \
-    langchain-mongodb
+    langchain==0.1.20 \
+    langchain-core==0.1.52 \
+    langchain-community==0.0.38 \
+    langchain-openai==0.0.5
 
 COPY . .
 
