@@ -21,4 +21,4 @@ EXPOSE 5001
 RUN adduser --disabled-password --gecos '' appuser
 USER appuser
 
-CMD ["sh", "-c", "gunicorn src.api.main:app -k uvicorn.workers.UvicornWorker -w 4 -b 0.0.0.0:${PORT:-5001}"]
+CMD ["sh", "-c", "gunicorn src.api.main:app -k uvicorn.workers.UvicornWorker -w 4 -b 0.0.0.0:${PORT:-5001} --access-logfile - --error-logfile -"]
