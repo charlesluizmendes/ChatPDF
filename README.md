@@ -37,12 +37,31 @@ Ou se preferir, instalar cada dependencia do projeto manualmente execute os coma
 pip install "fastapi[standard]"
 pip install fastapi-versionizer
 pip install pypdf
+pip install pymupdf
+pip install pillow
+pip install pytesseract
 pip install pymongo
 pip install langchain==0.1.20
 pip install langchain-core==0.1.52
 pip install langchain-community==0.0.38
 pip install langchain-openai==0.0.5
 ```
+
+Para o OCR funcionar será necessario instalar o pacote abaixo:
+
+* Para Ubuntu/Debian:
+
+```
+sudo apt-get install tesseract-ocr tesseract-ocr-por tesseract-ocr-eng
+```
+
+* Para Mac:
+
+```
+brew install tesseract tesseract-lang
+```
+
+* Para Windows baixe através do link https://github.com/UB-Mannheim/tesseract/wiki
 
 ### MongoDB Atlas
 

@@ -21,6 +21,8 @@ OPENAI_KEY = os.getenv("OPENAI_KEY")
 CHUNK_SIZE = int(os.getenv("CHUNK_SIZE"))
 CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP"))
 
+TESSERACT_CMD = os.getenv("TESSERACT_CMD")
+
 _mongodb_context = None
 
 def get_mongodb_context() -> MongoContext:
@@ -47,7 +49,7 @@ def get_vector_repository() -> VectorRepository:
         index_name=MONGO_INDEX_NAME,
         chunk_size=CHUNK_SIZE,
         chunk_overlap=CHUNK_OVERLAP,
-        model=OPENAI_MODEL,
+        tesseract_cmd=TESSERACT_CMD,
         api_key=OPENAI_KEY
     )
 

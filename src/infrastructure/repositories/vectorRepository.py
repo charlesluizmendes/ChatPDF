@@ -1,15 +1,19 @@
+import io
 import fitz
 import base64
+import pytesseract
 from typing import Tuple, Any
+from PIL import Image
 
 from langchain.schema import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores.mongodb_atlas import MongoDBAtlasVectorSearch
-from langchain_core.messages import HumanMessage
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 
 from src.domain.interfaces.repositories.vectorRepository import IVectorRepository
 from src.infrastructure.context.mongoContext import MongoContext
+
+
 
 
 class VectorRepository(IVectorRepository):
@@ -20,7 +24,7 @@ class VectorRepository(IVectorRepository):
         index_name: str,
         chunk_size: int,
         chunk_overlap: int,
-        model: str,
+        tesseract_cmd: str,
         api_key: str
     ):
         self.context = context
@@ -28,56 +32,52 @@ class VectorRepository(IVectorRepository):
         self.index_name = index_name
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
-        self.model = model
         self.api_key = api_key
 
         self.collection = context.get_collection(self.collection_name)
-        self.llm = ChatOpenAI(
-            model=self.model,
-            api_key=self.api_key,
-            temperature=0.0
-        )
+
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=self.chunk_size,
             chunk_overlap=self.chunk_overlap
         )
+
+        pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
+
         self.embeddings = OpenAIEmbeddings(
             api_key=self.api_key
         )
 
-    def _extract_with_vision(self, file_path: str) -> list:
+    def _extract_with_ocr(self, file_path: str) -> list:
         pdf_document = fitz.open(file_path)
         documents = []
         
         for page_num in range(len(pdf_document)):
             page = pdf_document[page_num]
             
-            pixels = page.get_pixmap(dpi=200)
-            img_bytes = pixels.tobytes("png")
-            img_b64 = base64.b64encode(img_bytes).decode('utf-8')
-
-            response = self.llm.invoke([
-                HumanMessage(
-                    content=[
-                        {
-                            "type": "text",
-                            "text": "Extraia e descreva TODO o conteúdo desta página."
-                        },
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": f"data:image/png;base64,{img_b64}"}
-                        }
-                    ]
-                )
-            ])
-
-            text = response.content
-                        
-            if text and text.strip():
+            text = page.get_text().strip()
+            
+            if text and len(text) > 50:
                 documents.append(Document(
                     page_content=text,
-                    metadata={"page": page_num + 1, "source": file_path}
+                    metadata={"page": page_num + 1, "source": file_path, "method": "native"}
                 ))
+            
+            else:                
+                pix = page.get_pixmap(dpi=300)
+                img = Image.open(io.BytesIO(pix.tobytes()))
+                
+                custom_config = r'--oem 3 --psm 6'
+                ocr_text = pytesseract.image_to_string(
+                    img, 
+                    lang='por+eng',
+                    config=custom_config
+                ).strip()
+                
+                if ocr_text and len(ocr_text) > 20:
+                    documents.append(Document(
+                        page_content=ocr_text,
+                        metadata={"page": page_num + 1, "source": file_path, "method": "ocr"}
+                    ))
         
         pdf_document.close()
         return documents
@@ -85,7 +85,7 @@ class VectorRepository(IVectorRepository):
 
     async def add_vectors(self, source_id: str, file_path: str) -> Tuple[bool, int]:       
         try:
-            pages = self._extract_with_vision(file_path)
+            pages = self._extract_with_ocr(file_path)
             
             documents = self.text_splitter.split_documents(pages)
             chunks_count = len(documents)
