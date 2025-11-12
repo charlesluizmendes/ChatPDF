@@ -14,8 +14,6 @@ from src.domain.interfaces.repositories.vectorRepository import IVectorRepositor
 from src.infrastructure.context.mongoContext import MongoContext
 
 
-
-
 class VectorRepository(IVectorRepository):
     def __init__(
         self, 
@@ -41,7 +39,7 @@ class VectorRepository(IVectorRepository):
             chunk_overlap=self.chunk_overlap
         )
 
-        pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
+        self.tesseract_cmd = tesseract_cmd
 
         self.embeddings = OpenAIEmbeddings(
             api_key=self.api_key
@@ -50,38 +48,36 @@ class VectorRepository(IVectorRepository):
     def _extract_with_ocr(self, file_path: str) -> list:
         pdf_document = fitz.open(file_path)
         documents = []
-        
+
         for page_num in range(len(pdf_document)):
             page = pdf_document[page_num]
-            
             text = page.get_text().strip()
-            
+
             if text and len(text) > 50:
                 documents.append(Document(
                     page_content=text,
                     metadata={"page": page_num + 1, "source": file_path, "method": "native"}
                 ))
-            
-            else:                
+            else:
                 pix = page.get_pixmap(dpi=300)
                 img = Image.open(io.BytesIO(pix.tobytes()))
-                
-                custom_config = r'--oem 3 --psm 6'
+
+                custom_config = f'--tessdata-dir "{self.tesseract_cmd}" --oem 3 --psm 6'
+
                 ocr_text = pytesseract.image_to_string(
                     img, 
-                    lang='por+eng',
+                    lang='por',
                     config=custom_config
                 ).strip()
-                
+
                 if ocr_text and len(ocr_text) > 20:
                     documents.append(Document(
                         page_content=ocr_text,
                         metadata={"page": page_num + 1, "source": file_path, "method": "ocr"}
                     ))
-        
+
         pdf_document.close()
         return documents
-
 
     async def add_vectors(self, source_id: str, file_path: str) -> Tuple[bool, int]:       
         try:
