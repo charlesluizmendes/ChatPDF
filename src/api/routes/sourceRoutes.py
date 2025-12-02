@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from fastapi import APIRouter, UploadFile, File, Depends
 from fastapi_versionizer.versionizer import api_version
 
 from src.domain.common.result import Result

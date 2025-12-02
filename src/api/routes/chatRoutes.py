@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends
 from fastapi_versionizer.versionizer import api_version
 
 from src.domain.common.result import Result
