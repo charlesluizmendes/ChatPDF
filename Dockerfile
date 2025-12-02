@@ -2,11 +2,21 @@ FROM python:3.10.11-slim
 
 WORKDIR /app
 
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    tesseract-ocr \
+    tesseract-ocr-por && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+    
 RUN pip install --no-cache-dir \
     "fastapi[standard]" \
     fastapi-versionizer \
     pymongo \
     pypdf \
+    pytesseract \
+    pymupdf \
+    pillow \
     langchain==0.1.20 \
     langchain-core==0.1.52 \
     langchain-community==0.0.38 \

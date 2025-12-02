@@ -35,7 +35,7 @@ class ChatService(IChatService):
         temperature = dto.temperature if dto.temperature is not None else self.default_temperature
 
         content = await self.llm_service.ask(
-            message=dto.message,
+            messages=dto.messages,
             retriever=retriever,
             prompt=prompt,
             temperature=temperature
