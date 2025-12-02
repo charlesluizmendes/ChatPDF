@@ -47,6 +47,7 @@ def get_vector_repository() -> VectorRepository:
         index_name=MONGO_INDEX_NAME,
         chunk_size=CHUNK_SIZE,
         chunk_overlap=CHUNK_OVERLAP,
+        model=OPENAI_MODEL,
         api_key=OPENAI_KEY
     )
 
