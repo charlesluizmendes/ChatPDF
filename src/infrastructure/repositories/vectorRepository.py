@@ -14,7 +14,6 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 
 from src.domain.interfaces.repositories.vectorRepository import IVectorRepository
 from src.infrastructure.adapters.neighborRetriever import NeighborRetriever
-
 from src.infrastructure.context.mongoContext import MongoContext
 
 
@@ -284,8 +283,8 @@ class VectorRepository(IVectorRepository):
                     ))
 
         pdf_document.close()
-
         return documents
+
 
     async def add_vectors(self, source_id: str, file_path: str) -> Tuple[bool, int]:       
         try:
