@@ -21,7 +21,8 @@ class NeighborRetriever(BaseRetriever):
         self.retriever = retriever
         self.collection = collection
         self.source_id = source_id
-    
+
+
     def _get_relevant_documents(self, query: str, *, run_manager: CallbackManagerForRetrieverRun = None) -> List[Document]:
         docs = self.retriever.invoke(query)
         
@@ -61,11 +62,7 @@ class NeighborRetriever(BaseRetriever):
                 ))
         
         return result if result else docs
-    
-    async def _aget_relevant_documents(
-        self,
-        query: str,
-        *,
-        run_manager: AsyncCallbackManagerForRetrieverRun = None
-    ) -> List[Document]:
+
+
+    async def _aget_relevant_documents(self, query: str, *, run_manager: AsyncCallbackManagerForRetrieverRun = None) -> List[Document]:
         return self._get_relevant_documents(query, run_manager=run_manager)
