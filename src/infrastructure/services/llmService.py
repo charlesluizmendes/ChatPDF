@@ -16,7 +16,7 @@ class LlmService(IllmService):
         self.model = model
         self.api_key = api_key
     
-    def _convert_messages_to_langchain(self, messages: list) -> list:
+    def _convert_messages(self, messages: list) -> list:
         langchain_messages = []
 
         for msg in messages:
@@ -31,7 +31,7 @@ class LlmService(IllmService):
         try:
             current_question = messages[-1]["content"]
             
-            chat_history = self._convert_messages_to_langchain(messages[:-1]) if len(messages) > 1 else []
+            chat_history = self._convert_messages(messages[:-1]) if len(messages) > 1 else []
             
             contextualize_q_prompt = ChatPromptTemplate.from_messages([
                 ("system", "Dado um histórico de conversa e a última pergunta do usuário, "
