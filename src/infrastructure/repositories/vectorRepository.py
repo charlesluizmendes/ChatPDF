@@ -10,7 +10,8 @@ from langchain.schema import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores.mongodb_atlas import MongoDBAtlasVectorSearch
 from langchain_core.messages import HumanMessage
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_openai import AzureOpenAIEmbeddings
+from langchain_openai import AzureChatOpenAI
 
 from src.domain.interfaces.repositories.vectorRepository import IVectorRepository
 from src.infrastructure.adapters.neighborRetriever import NeighborRetriever
@@ -26,30 +27,32 @@ class VectorRepository(IVectorRepository):
         chunk_size: int,
         chunk_overlap: int,
         model: str,
+        azure_deployment: str,
+        azure_endpoint: str,
+        api_version: str,
         api_key: str
     ):
         self.context = context
-        self.collection_name = collection_name
+        self.collection = context.get_collection(collection_name)
         self.index_name = index_name
-        self.chunk_size = chunk_size
-        self.chunk_overlap = chunk_overlap
-        self.model = model
-        self.api_key = api_key
-
-        self.collection = context.get_collection(self.collection_name)
-
+        
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=self.chunk_size,
-            chunk_overlap=self.chunk_overlap
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap
         )
 
-        self.embeddings = OpenAIEmbeddings(
-            api_key=self.api_key
+        self.embeddings = AzureOpenAIEmbeddings(
+            model=model,
+            azure_endpoint=azure_endpoint,
+            api_version=api_version,
+            api_key=api_key
         )
 
-        self.llm = ChatOpenAI(
-            model=self.model,
-            api_key=self.api_key,
+        self.llm = AzureChatOpenAI(
+            azure_deployment=azure_deployment,
+            azure_endpoint=azure_endpoint,
+            api_version=api_version,
+            api_key=api_key,
             temperature=1.0
         )
 
@@ -75,14 +78,8 @@ class VectorRepository(IVectorRepository):
 
             message = HumanMessage(
                 content=[
-                    {
-                        "type": "text", 
-                        "text": "Descreva esta imagem em uma frase simples e objetiva em português."
-                    },
-                    {
-                        "type": "image_url",
-                        "image_url": {"url": f"data:image/png;base64,{img_base64}"}
-                    }
+                    {"type": "text", "text": "Descreva esta imagem em uma frase simples e objetiva em português."},
+                    {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img_base64}"}}
                 ]
             )
 
@@ -146,7 +143,10 @@ class VectorRepository(IVectorRepository):
         
         return False
 
-    def _extract_pdf_content(self, file_path: str) -> List[Document]:
+    async def _extract_pdf_content(self, file_path: str) -> List[Document]:
+        import asyncio
+        loop = asyncio.get_event_loop()
+        
         pdf_document = fitz.open(file_path)
         
         pages_data = []
@@ -223,7 +223,7 @@ class VectorRepository(IVectorRepository):
             pages_data.append(page_info)
         
         if all_images:
-            results = self._process_images_parallel(all_images)
+            results = await loop.run_in_executor(None, self._process_images_parallel, all_images)
             
             for i, (page_idx, img_idx) in enumerate(image_map):
                 pages_data[page_idx]["image_results"][img_idx] = results[i]
@@ -283,12 +283,15 @@ class VectorRepository(IVectorRepository):
                     ))
 
         pdf_document.close()
-        return documents
 
+        return documents
 
     async def add_vectors(self, source_id: str, file_path: str) -> Tuple[bool, int]:       
         try:
-            pages = self._extract_pdf_content(file_path)
+            import asyncio
+            loop = asyncio.get_event_loop()
+            
+            pages = await self._extract_pdf_content(file_path)
             
             documents = self.text_splitter.split_documents(pages)
             chunks_count = len(documents)
@@ -297,11 +300,14 @@ class VectorRepository(IVectorRepository):
                 doc.metadata["source_id"] = source_id
                 doc.metadata["chunk_index"] = i
             
-            MongoDBAtlasVectorSearch.from_documents(
-                documents=documents,
-                embedding=self.embeddings,
-                collection=self.collection,
-                index_name=self.index_name
+            await loop.run_in_executor(
+                None,
+                lambda: MongoDBAtlasVectorSearch.from_documents(
+                    documents=documents,
+                    embedding=self.embeddings,
+                    collection=self.collection,
+                    index_name=self.index_name
+                )
             )
             
             return True, chunks_count
@@ -338,4 +344,4 @@ class VectorRepository(IVectorRepository):
             return NeighborRetriever(retriever, self.collection, source_id)
         
         except Exception:
-            raise        
+            raise
